@@ -1,19 +1,16 @@
 from statistics import mean
-from tqdm import tqdm
+
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw
-
+from matplotlib import pyplot as plt
+from tqdm import tqdm
 from detector import pose_estimation
-
-from mpl_toolkits import mplot3d
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import cm
+from detector.synchrony_detection import SynchronyDetector
 
 
 class Visualizer:
-    def __init__(self):
+    def __init__(self, trace_len):
         self.img = None
         self.poses = None
         self.curr_frame = None
@@ -22,32 +19,39 @@ class Visualizer:
         self.t_traces = {}
         self.colors = plt.get_cmap("tab20")
         plt.ion()
+        self.trace_len = trace_len
 
     def update(self, img, poses, frame_idx):
         self.img = img
         self.poses = poses
         self.curr_frame = frame_idx
+        self.update_traces()
+        self.cut_traces()
+        # self.clean_traces()
 
     def update_traces(self):
         # First, cut traces of poses that disappeared
         for id in list(self.x_traces):
             # dict id not in current pose list
             if id not in [pose.id for pose in self.poses]:
-                if self.t_traces[id][-1] == self.curr_frame-1:
+                if self.t_traces[id][-1] == self.curr_frame - 1:
                     tqdm.write(f"id {id} disappeared from tracking area.")
-                #self.x_traces[id] = self.x_traces[id].append(None)
-                #self.y_traces[id] = self.y_traces[id].append(None)
+                    del self.x_traces[id]
+                    del self.y_traces[id]
+                    del self.t_traces[id]
+                # self.x_traces[id] = self.x_traces[id].append(None)
+                # self.y_traces[id] = self.y_traces[id].append(None)
         # Second, add new poses to existing traces or create new trace
         for pose in self.poses:
             # id not in list
             if self.x_traces.get(pose.id) is None:
                 tqdm.write(f"id {pose.id} entered tracking area.")
-                self.x_traces[pose.id]=[(pose.keypoints[0])[0]]
-                self.y_traces[pose.id]=[(pose.keypoints[0])[1]]
+                self.x_traces[pose.id] = [(pose.keypoints[0])[0]]
+                self.y_traces[pose.id] = [(pose.keypoints[0])[1]]
                 self.t_traces[pose.id] = [self.curr_frame]
             # id in list
             else:
-                #print(f"id {pose.id} continues to be in tracking area.")
+                # print(f"id {pose.id} continues to be in tracking area.")
                 self.x_traces[pose.id].append(
                     (pose.keypoints[0])[0])
                 self.y_traces[pose.id].append(
@@ -56,86 +60,56 @@ class Visualizer:
 
     def cut_traces(self):
         for id in list(self.x_traces):
-            if len(self.x_traces[id]) > 100:
-                tqdm.write(f"shortening trace of id {id}.")
-                self.x_traces[id] = self.x_traces.get(id)[:100]
-                self.y_traces[id] = self.y_traces.get(id)[:100]
-                self.t_traces[id] = self.t_traces.get(id)[:100]
-
-    def clean_traces(self):
-        for id in list(self.x_traces):
-            if all(val is None for val in self.x_traces.get(id)):
-                tqdm.write(f"removing trace of id {id}, "
-                      f"who disappeared 100 frames ago.")
-                del self.x_traces[id]
-                del self.y_traces[id]
-                del self.t_traces[id]
+            if len(self.x_traces[id]) > self.trace_len:
+                #tqdm.write(f"shortening trace of id {id}.")
+                del self.x_traces.get(id)[:1]
+                del self.y_traces.get(id)[:1]
+                del self.t_traces.get(id)[:1]
 
     def create_plot(self):
-        plt.ion()
-        self.update_traces()
-        self.cut_traces()
-        self.clean_traces()
-        fig = plt.figure(num='diid2')
-        ax = plt.axes(projection='3d')
-        ax.yaxis.set_ticklabels([])
-        ax.zaxis.set_ticklabels([])
-        for line in ax.yaxis.get_ticklines():
-            line.set_visible(False)
-        for line in ax.zaxis.get_ticklines():
-            line.set_visible(False)
-        # Data for a three-dimensional line
-
-        for id in list(self.x_traces):
-            ax.plot(self.t_traces.get(id),
-                    self.x_traces.get(id),
-                    self.y_traces.get(id))
-        plt.draw()
-        plt.pause(0.0001)
-
-
-
-    """
-    if self.sc is None:
-            self.update_traces()
-            self.cut_traces()
-            self.clean_traces()
-            for id in list(self.x_traces):
-                self.fig = plt.figure(num='diid2')
-                self.ax = plt.axes(projection='3d')
-                self.sc = self.ax.scatter(self.t_traces.get(id),
-                                       self.x_traces.get(id),
-                                       self.y_traces.get(id),
-                                       label=f'id {id}')
+        if self.curr_frame % self.trace_len in range(10):
+            img = self.fadeIn(np.full_like(self.img, 0), self.img, (self.curr_frame % self.trace_len))
+        elif (self.curr_frame+10) % self.trace_len in range(10):
+            img = self.fadeIn(self.img, np.full_like(self.img, 0), (self.curr_frame % self.trace_len))
         else:
-            self.update_traces()
-            self.cut_traces()
-            self.clean_traces()
-            for id in list(self.x_traces):
+            img = np.full_like(self.img, 0)
+        for id in list(self.x_traces):
+            for point_idx in range(len(list(self.x_traces.get(id))) - 1):
+                cv2.line(
+                    img,
+                    (int(self.x_traces.get(id)[point_idx]),
+                     int(self.y_traces.get(id)[point_idx])),
+                    (int(self.x_traces.get(id)[point_idx + 1]),
+                     int(self.y_traces.get(id)[point_idx + 1])),
+                    [255, 0, 0], 2
+                )
 
-                self.sc._offsets3d = (self.t_traces.get(id),
-                                      self.x_traces.get(id),
-                                      self.y_traces.get(id))
-        return self.fig
-    """
-
-    def draw_bounding_boxes(self, track):
-        for pose in self.poses:
+            x_min = min(self.x_traces.get(id))
+            x_max = max(self.x_traces.get(id))
+            y_min = min(self.y_traces.get(id))
+            y_max = max(self.y_traces.get(id))
             cv2.rectangle(
-                self.img,
-                (pose.bbox[0], pose.bbox[1]),
-                (pose.bbox[0] + pose.bbox[2], pose.bbox[1] + pose.bbox[3]),
+                img,
+                (x_min, y_max),
+                (x_max, y_min),
+                [0, 255, 0],
+            )
+            cv2.putText(
+                img,
+                "diid: {}".format(id),
+                (x_min, y_max - 16),
+                cv2.FONT_HERSHEY_COMPLEX,
+                0.5,
                 (0, 255, 0),
             )
-            if track:
-                cv2.putText(
-                    self.img,
-                    "diid: {}".format(pose.id),
-                    (pose.bbox[0], pose.bbox[1] - 16),
-                    cv2.FONT_HERSHEY_COMPLEX,
-                    0.5,
-                    (0, 0, 255),
-                )
+        return img
+
+
+
+    def fadeIn(self,img1, img2, x):  # pass images here to fade between
+        fadein = x / 10
+        dst = cv2.addWeighted(img1, 1 - fadein, img2, fadein, 0)
+        return dst
 
     def skeleton_overlay(self):
         skeleton_keypoint_pairs = (
@@ -149,7 +123,7 @@ class Visualizer:
                 ]
             else:
                 for key, value in self.synchrony.items():
-                    color = [0,0,0]
+                    color = self.define_skeleton_color(pose, key, value)
                     colors.append(color)
             pose.draw(self.img, colors)
 
@@ -204,14 +178,14 @@ class Visualizer:
 
     @staticmethod
     def draw_text(
-        img,
-        text,
-        font=cv2.FONT_HERSHEY_PLAIN,
-        pos=(0, 0),
-        font_scale=3,
-        font_thickness=2,
-        text_color=(0, 255, 0),
-        text_color_bg=(0, 0, 0),
+            img,
+            text,
+            font=cv2.FONT_HERSHEY_PLAIN,
+            pos=(0, 0),
+            font_scale=3,
+            font_thickness=2,
+            text_color=(0, 255, 0),
+            text_color_bg=(0, 0, 0),
     ):
         x, y = pos
         text_size, _ = cv2.getTextSize(text, font, font_scale, font_thickness)

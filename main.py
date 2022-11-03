@@ -13,7 +13,7 @@ from detector import (
     output_creation,
     pose_estimation,
     synchrony_detection,
-    visualization_2,
+    visualization,
 )
 from models.with_mobilenet import PoseEstimationWithMobileNet
 from modules.load_state import load_state
@@ -27,10 +27,7 @@ def run(
     save_livestream=False,
     save_output_table=False,
     save_camera_input=False,
-    synch_metric="pss",
-    cpu=True,
     net="",
-    group_size="all",
     frame_skip=1,
 ):
     plt.ion()
@@ -39,20 +36,10 @@ def run(
         raise ValueError("--video has to be provided")
     if net == "":
         raise ValueError("--checkpoint-path has to be provided")
-    if synch_metric not in ["pss", "pos", "lss", "los"]:
-        raise ValueError(
-            f"{synch_metric} not a valid argument for synch_metric"
-        )
     if frame_skip < 1 or not isinstance(frame_skip, int):
         raise ValueError("--frame-skip needs to be a positive integer")
-    if group_size != "all" and group_size < 2:
-        raise ValueError("--group-size needs to be an integer >= 2 or 'all'")
 
-    print(
-        f"System setup starting! "
-        f"Synch metric: {synch_metric}, "
-        f"Group size: {group_size}"
-    )
+    print("system setup starting...")
 
     # Setup input handling
     frame_provider = input_handling.VideoReader(video)
@@ -61,13 +48,11 @@ def run(
     height_size = 256
     stride = 8
     upsample_ratio = 4
-    if not cpu and torch.cuda.is_available():
-        net = net.cuda()
     previous_poses = []
     track = 1
     smooth = 1
     pose_estimator = pose_estimation.PoseEstimator(
-        net, height_size, stride, upsample_ratio, cpu
+        net, height_size, stride, upsample_ratio
     )
 
     # Setup output generation
@@ -90,7 +75,7 @@ def run(
         )
 
     # Setup visualization
-    visualizer = visualization_2.Visualizer2()
+    visualizer = visualization.Visualizer(trace_len=50)
     print("Setup finished.")
     # Frame analysis
     print(
@@ -123,6 +108,7 @@ def run(
             )
             previous_poses = all_poses
 
+        """
         # Generate video output with overlay
         if show_livestream or save_livestream:
             visualizer.update(
@@ -131,13 +117,17 @@ def run(
                 frame_idx
             )
             visualizer.create_plot()
-
-
-
         """
-        # Display illustrated frame
+        # Add colored skeleton to indicate degree of synchronization
+        visualizer.update(
+            img,
+            all_poses,
+            frame_idx
+        )
+        img=visualizer.create_plot()
+
         if show_livestream:
-            plt.show()
+            cv2.imshow("Synch Detector", img)
             key = cv2.waitKey(delay)
             if key == 27:  # esc
                 break
@@ -146,7 +136,8 @@ def run(
                     delay = 0
                 else:
                     delay = 1
-        """
+
+
         # Attach illustrated frame to output video
         if save_livestream:
             output_handler_video.build_outputs(visualizer.img)
@@ -184,20 +175,13 @@ if __name__ == "__main__":
         "--save-camera-input", default=False, help="save input from camera"
     )
     parser.add_argument(
-        "--synch-metric", default="pss", help="synchrony metric to be used"
-    )
-    parser.add_argument("--cpu", default=True, help="run inference on cpu")
-    parser.add_argument(
-        "--group-size",
-        default="all",
-        help="number of people for synch detection",
-    )
-    parser.add_argument(
         "--frame-skip", default=1, help="only every i-th frame gets analyzed"
     )
 
     args = parser.parse_args()
-
+    #if torch.backends.mps.is_available():
+    #    print("M1 GPU avail")
+    # torch.device("mps")
     # Setup pose estimation with OpenPose Lightweight
     net = PoseEstimationWithMobileNet()
     checkpoint = torch.load(
@@ -205,6 +189,7 @@ if __name__ == "__main__":
     )
     load_state(net, checkpoint)
     net = net.eval()
+    #net.to(torch.device("mps"))
 
     run(
         args.video,
@@ -212,11 +197,8 @@ if __name__ == "__main__":
         args.save_livestream,
         args.save_output_table,
         args.save_camera_input,
-        args.synch_metric,
-        args.cpu,
         net,
-        args.group_size,
-        args.frame_skip,
+        args.frame_skip
     )
 
     exit()
