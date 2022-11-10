@@ -127,7 +127,7 @@ def run(
         img=visualizer.create_plot()
 
         if show_livestream:
-            cv2.imshow("Synch Detector", img)
+            cv2.imshow("diid2", img)
             key = cv2.waitKey(delay)
             if key == 27:  # esc
                 break
