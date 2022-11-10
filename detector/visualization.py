@@ -20,6 +20,8 @@ class Visualizer:
         self.colors = plt.get_cmap("tab20")
         plt.ion()
         self.trace_len = trace_len
+        self.new_appearance = None
+        self.total_count = 0
 
     def update(self, img, poses, frame_idx):
         self.img = img
@@ -45,6 +47,8 @@ class Visualizer:
         for pose in self.poses:
             # id not in list
             if self.x_traces.get(pose.id) is None:
+                self.total_count += 1
+                self.last_new_appearance = self.curr_frame
                 tqdm.write(f"id {pose.id} entered tracking area.")
                 self.x_traces[pose.id] = [(pose.keypoints[0])[0]]
                 self.y_traces[pose.id] = [(pose.keypoints[0])[1]]
@@ -52,29 +56,34 @@ class Visualizer:
             # id in list
             else:
                 # print(f"id {pose.id} continues to be in tracking area.")
-                self.x_traces[pose.id].append(
-                    (pose.keypoints[0])[0])
-                self.y_traces[pose.id].append(
-                    (pose.keypoints[0])[1])
+                if (pose.keypoints[0])[0] == -1 or (pose.keypoints[0])[1] == -1:
+                    self.x_traces[pose.id].append(self.x_traces[pose.id][-1])
+                    self.y_traces[pose.id].append(self.y_traces[pose.id][-1])
+                else:
+                    self.x_traces[pose.id].append((pose.keypoints[0])[0])
+                    self.y_traces[pose.id].append((pose.keypoints[0])[1])
                 self.t_traces[pose.id].append(self.curr_frame)
 
     def cut_traces(self):
         for id in list(self.x_traces):
             if len(self.x_traces[id]) > self.trace_len:
-                #tqdm.write(f"shortening trace of id {id}.")
+                # tqdm.write(f"shortening trace of id {id}.")
                 del self.x_traces.get(id)[:1]
                 del self.y_traces.get(id)[:1]
                 del self.t_traces.get(id)[:1]
 
     def create_plot(self):
-        if self.curr_frame % self.trace_len in range(10):
-            img = self.img
+        # if self.curr_frame % self.trace_len in range(10):
+        if self.last_new_appearance == 0:
+            self.img = np.full_like(self.img, 0)
+        elif self.curr_frame % self.last_new_appearance in range(10):
+            self.img = self.img
         else:
-            img = np.full_like(self.img, 0)
+            self.img = np.full_like(self.img, 0)
         for id in list(self.x_traces):
             for point_idx in range(len(list(self.x_traces.get(id))) - 1):
                 cv2.line(
-                    img,
+                    self.img,
                     (int(self.x_traces.get(id)[point_idx]),
                      int(self.y_traces.get(id)[point_idx])),
                     (int(self.x_traces.get(id)[point_idx + 1]),
@@ -87,29 +96,28 @@ class Visualizer:
             y_min = min(self.y_traces.get(id))
             y_max = max(self.y_traces.get(id))
             cv2.rectangle(
-                img,
+                self.img,
                 (x_min, y_max),
                 (x_max, y_min),
                 [255, 255, 255],
             )
             cv2.putText(
-                img,
+                self.img,
                 "diid: {}".format(id),
                 (x_min, y_max - 16),
                 cv2.FONT_HERSHEY_COMPLEX,
                 0.5,
                 (255, 255, 255),
             )
-        return img
+        return self.img
 
-    def fadeIn(self,img1, img2, x):  # pass images here to fade between
+    def fadeIn(self, img1, img2, x):  # pass images here to fade between
         fadein = x / 10
         dst = cv2.addWeighted(img1, 1 - fadein, img2, fadein, 0)
         return dst
 
     def counter_overlay(self):
-        max_id = max(list(self.x_traces))
-        overlay_text = f"Individuals tracked: {max_id}"
+        overlay_text = f"Individuals tracked: {self.total_count}"
         dash = self.overlay_dashboard(
             overlay_text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)
         x_offset = y_offset = 10
@@ -122,7 +130,7 @@ class Visualizer:
     def overlay_dashboard(self, text, font, font_scale, font_thickness):
         textsize = cv2.getTextSize(text, font, 1, 2)[0]
         background = self.round_rectangle(
-            (textsize[0], textsize[1] * 2), 10, "white"
+            (textsize[0], textsize[1] * 2), 10, "black"
         )
         dash = np.array(background)
         # Convert RGB to BGR
@@ -132,7 +140,8 @@ class Visualizer:
         textY = (dash.shape[0] + textsize[1]) / 2
 
         # add text centered on image
-        cv2.putText(dash, text, (int(textX), int(textY)), font, 1, (0, 0, 0), 2)
+        cv2.putText(dash, text, (int(textX), int(textY)), font, 1,
+                    (255, 255, 255), 2)
 
         return dash
 

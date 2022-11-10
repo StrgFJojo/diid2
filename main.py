@@ -108,26 +108,18 @@ def run(
             )
             previous_poses = all_poses
 
-        """
-        # Generate video output with overlay
-        if show_livestream or save_livestream:
-            visualizer.update(
-                img,
-                all_poses,
-                frame_idx
-            )
-            visualizer.create_plot()
-        """
-        # Add colored skeleton to indicate degree of synchronization
+
+        # Build visualization
         visualizer.update(
             img,
             all_poses,
             frame_idx
         )
-        img=visualizer.create_plot()
+        visualizer.create_plot()
+        visualizer.counter_overlay()
 
         if show_livestream:
-            cv2.imshow("diid2", img)
+            cv2.imshow("diid2", visualizer.img)
             key = cv2.waitKey(delay)
             if key == 27:  # esc
                 break
