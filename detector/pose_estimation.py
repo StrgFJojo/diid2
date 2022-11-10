@@ -304,7 +304,7 @@ class Pose:
                 )
 
 
-def get_similarity(a, b, threshold=0.1): #0.5
+def get_similarity(a, b, threshold=0.001): #0.5 #smaller->less sensitive
     num_similar_kpt = 0
     for kpt_id in range(Pose.num_kpts):
         if a.keypoints[kpt_id, 0] != -1 and b.keypoints[kpt_id, 0] != -1:
