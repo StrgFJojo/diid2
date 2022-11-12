@@ -56,21 +56,28 @@ class Visualizer:
                 self.total_count += 1
                 self.last_new_appearance = self.curr_frame
                 tqdm.write(f"id {pose.id} entered tracking area.")
-
-                self.x_traces[pose.id] = [(pose.keypoints[4])[0]]
-                self.y_traces[pose.id] = [(pose.keypoints[4])[1]]
-                self.t_traces[pose.id] = [self.curr_frame]
+                if (pose.keypoints[4])[0] == -1 or (
+                        pose.keypoints[4])[1] == -1:
+                    print("new appearance -1 case, len trace == 0")
+                    self.x_traces[pose.id].append(np.nan)
+                    self.y_traces[pose.id].append(np.nan)
+                else:
+                    self.x_traces[pose.id] = [(pose.keypoints[4])[0]]
+                    self.y_traces[pose.id] = [(pose.keypoints[4])[1]]
+                    self.t_traces[pose.id] = [self.curr_frame]
             # id in list
             else:
                 # print(f"id {pose.id} continues to be in tracking area.")
                 if (pose.keypoints[4])[0] == -1 or (
                         pose.keypoints[4])[1] == -1:
-                    print("-1 case")
                     if len(self.x_traces[pose.id]) > 0:
+                        print("-1 case, len trace > 0")
                         self.x_traces[pose.id].append(self.x_traces[pose.id][-1])
                         self.y_traces[pose.id].append(self.y_traces[pose.id][-1])
                     else:
-                        continue
+                        print("-1 case, len trace == 0")
+                        self.x_traces[pose.id].append(np.nan)
+                        self.y_traces[pose.id].append(np.nan)
                 else:
                     self.x_traces[pose.id].append((pose.keypoints[4])[0])
                     self.y_traces[pose.id].append((pose.keypoints[4])[1])
