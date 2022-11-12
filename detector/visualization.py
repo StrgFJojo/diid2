@@ -19,7 +19,7 @@ class Visualizer:
         self.x_traces = {}
         self.y_traces = {}
         self.t_traces = {}
-        self.colors = plt.get_cmap("tab20")
+        #self.colors = plt.get_cmap("tab20")
         plt.ion()
         self.trace_len = trace_len
         self.last_new_appearance = None
@@ -56,19 +56,19 @@ class Visualizer:
                 self.total_count += 1
                 self.last_new_appearance = self.curr_frame
                 tqdm.write(f"id {pose.id} entered tracking area.")
-                self.x_traces[pose.id] = [(pose.keypoints[0])[0]]
-                self.y_traces[pose.id] = [(pose.keypoints[0])[1]]
+                self.x_traces[pose.id] = [(pose.keypoints[4])[0]]
+                self.y_traces[pose.id] = [(pose.keypoints[4])[1]]
                 self.t_traces[pose.id] = [self.curr_frame]
             # id in list
             else:
                 # print(f"id {pose.id} continues to be in tracking area.")
-                if (pose.keypoints[0])[0] == -1.0 or (
-                        pose.keypoints[0])[1] == -1.0:
+                if (pose.keypoints[4])[0] == -1.0 or (
+                        pose.keypoints[4])[1] == -1.0:
                     self.x_traces[pose.id].append(self.x_traces[pose.id][-1])
                     self.y_traces[pose.id].append(self.y_traces[pose.id][-1])
                 else:
-                    self.x_traces[pose.id].append((pose.keypoints[0])[0])
-                    self.y_traces[pose.id].append((pose.keypoints[0])[1])
+                    self.x_traces[pose.id].append((pose.keypoints[4])[0])
+                    self.y_traces[pose.id].append((pose.keypoints[4])[1])
                 self.t_traces[pose.id].append(self.curr_frame)
 
     def cut_traces(self):
