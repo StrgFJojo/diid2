@@ -62,7 +62,8 @@ class Visualizer:
             # id in list
             else:
                 # print(f"id {pose.id} continues to be in tracking area.")
-                if (pose.keypoints[0])[0] == -1 or (pose.keypoints[0])[1] == -1:
+                if (pose.keypoints[0])[0] == -1.0 or (
+                        pose.keypoints[0])[1] == -1.0:
                     self.x_traces[pose.id].append(self.x_traces[pose.id][-1])
                     self.y_traces[pose.id].append(self.y_traces[pose.id][-1])
                 else:
@@ -79,13 +80,18 @@ class Visualizer:
                 del self.t_traces.get(id)[:1]
 
     def create_plot(self):
-        # if self.curr_frame % self.trace_len in range(10):
+        if self.curr_frame % self.trace_len in range(10):
+            self.img = self.img
+        else:
+            self.img = np.full_like(self.img, 0)
+        """
         if self.last_new_appearance is None or self.last_new_appearance == 0:
             self.img = np.full_like(self.img, 0)
         elif self.curr_frame % self.last_new_appearance in range(10):
             self.img = self.img
         else:
             self.img = np.full_like(self.img, 0)
+        """
         for id in list(self.x_traces):
             if id < len(self.colors):
                 col = ImageColor.getcolor(self.colors[id],"RGB")
@@ -112,6 +118,7 @@ class Visualizer:
                 (x_min, y_max),
                 (x_max, y_min),
                 [255, 255, 255],
+                thickness=2
             )
             cv2.putText(
                 self.img,
@@ -120,6 +127,7 @@ class Visualizer:
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
                 (255, 255, 255),
+                thickness=2
             )
         return self.img
 
