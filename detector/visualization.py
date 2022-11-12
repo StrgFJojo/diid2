@@ -141,7 +141,7 @@ class Visualizer:
         return dst
 
     def counter_overlay(self):
-        overlay_text = f"Individuals tracked: {self.total_count}"
+        overlay_text = f"Total number of traces created: {self.total_count}"
         dash = self.overlay_dashboard(
             overlay_text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)
         x_offset = y_offset = 10
