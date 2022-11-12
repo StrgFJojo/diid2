@@ -7,6 +7,8 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 from detector import pose_estimation
 from detector.synchrony_detection import SynchronyDetector
+from random import randint
+from PIL import ImageColor
 
 
 class Visualizer:
@@ -20,8 +22,12 @@ class Visualizer:
         self.colors = plt.get_cmap("tab20")
         plt.ion()
         self.trace_len = trace_len
-        self.new_appearance = None
+        self.last_new_appearance = None
         self.total_count = 0
+        self.colors = []
+        n = 100
+        for i in range(n):
+            self.colors.append('#%06X' % randint(0, 0xFFFFFF))
 
     def update(self, img, poses, frame_idx):
         self.img = img
@@ -74,13 +80,19 @@ class Visualizer:
 
     def create_plot(self):
         # if self.curr_frame % self.trace_len in range(10):
-        if self.last_new_appearance == 0:
+        if self.last_new_appearance is None:
             self.img = np.full_like(self.img, 0)
         elif self.curr_frame % self.last_new_appearance in range(10):
             self.img = self.img
         else:
             self.img = np.full_like(self.img, 0)
         for id in list(self.x_traces):
+            if id < len(self.colors):
+                col = ImageColor.getcolor(self.colors[id],"RGB")
+            else:
+                col = ImageColor.getcolor(self.colors[id % len(self.colors)]
+                                          ,"RGB")
+
             for point_idx in range(len(list(self.x_traces.get(id))) - 1):
                 cv2.line(
                     self.img,
@@ -88,9 +100,9 @@ class Visualizer:
                      int(self.y_traces.get(id)[point_idx])),
                     (int(self.x_traces.get(id)[point_idx + 1]),
                      int(self.y_traces.get(id)[point_idx + 1])),
-                    [255, 0, 0], 2
+                    col, 2
                 )
-
+            # [255, 0, 0]
             x_min = min(self.x_traces.get(id))
             x_max = max(self.x_traces.get(id))
             y_min = min(self.y_traces.get(id))
