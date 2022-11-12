@@ -59,8 +59,8 @@ class Visualizer:
                 if (pose.keypoints[4])[0] == -1 or (
                         pose.keypoints[4])[1] == -1:
                     print("new appearance -1 case, len trace == 0")
-                    self.x_traces[pose.id].append(np.nan)
-                    self.y_traces[pose.id].append(np.nan)
+                    self.x_traces[pose.id] = [np.nan]
+                    self.y_traces[pose.id] = [np.nan]
                 else:
                     self.x_traces[pose.id] = [(pose.keypoints[4])[0]]
                     self.y_traces[pose.id] = [(pose.keypoints[4])[1]]
