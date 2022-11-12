@@ -85,9 +85,9 @@ class Visualizer:
 
     def create_plot(self):
         if self.curr_frame % self.trace_len in range(10):
-            self.img = self.img
+            self.img = cv2.cvtColor(cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR)
         else:
-            self.img = np.full_like(self.img, 0)
+            self.img = np.full_like(cv2.cvtColor(cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR), 0)
         """
         if self.last_new_appearance is None or self.last_new_appearance == 0:
             self.img = np.full_like(self.img, 0)
