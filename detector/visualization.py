@@ -53,14 +53,13 @@ class Visualizer:
         for pose in self.poses:
             # id not in list
             if self.x_traces.get(pose.id) is None:
-                self.total_count += 1
                 self.last_new_appearance = self.curr_frame
-                tqdm.write(f"id {pose.id} entered tracking area.")
                 if (pose.keypoints[4])[0] == -1 or (
                         pose.keypoints[4])[1] == -1:
-                    print("new appearance -1 case, len trace == 0")
                     continue
                 else:
+                    self.total_count += 1
+                    tqdm.write(f"id {pose.id} entered tracking area.")
                     self.x_traces[pose.id] = [(pose.keypoints[4])[0]]
                     self.y_traces[pose.id] = [(pose.keypoints[4])[1]]
                     self.t_traces[pose.id] = [self.curr_frame]
