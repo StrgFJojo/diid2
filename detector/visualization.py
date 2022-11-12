@@ -80,7 +80,7 @@ class Visualizer:
 
     def create_plot(self):
         # if self.curr_frame % self.trace_len in range(10):
-        if self.last_new_appearance is None:
+        if self.last_new_appearance is None or self.last_new_appearance == 0:
             self.img = np.full_like(self.img, 0)
         elif self.curr_frame % self.last_new_appearance in range(10):
             self.img = self.img
@@ -100,7 +100,7 @@ class Visualizer:
                      int(self.y_traces.get(id)[point_idx])),
                     (int(self.x_traces.get(id)[point_idx + 1]),
                      int(self.y_traces.get(id)[point_idx + 1])),
-                    col, 2
+                    col, 4
                 )
             # [255, 0, 0]
             x_min = min(self.x_traces.get(id))
@@ -117,8 +117,8 @@ class Visualizer:
                 self.img,
                 "diid: {}".format(id),
                 (x_min, y_max - 16),
-                cv2.FONT_HERSHEY_COMPLEX,
-                0.5,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
                 (255, 255, 255),
             )
         return self.img
