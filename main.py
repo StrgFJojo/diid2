@@ -75,7 +75,7 @@ def run(
         )
 
     # Setup visualization
-    visualizer = visualization.Visualizer(trace_len=50)
+    visualizer = visualization.Visualizer(trace_len=100)
     print("Setup finished.")
     # Frame analysis
     print(
