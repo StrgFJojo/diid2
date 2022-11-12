@@ -65,7 +65,7 @@ class Visualizer:
                     self.t_traces[pose.id] = [self.curr_frame]
             # id in list
             else:
-                print(f"id {pose.id} continues to be in tracking area.")
+                tqdm.write(f"id {pose.id} continues to be in tracking area.")
                 if (pose.keypoints[4])[0] == -1 or (
                         pose.keypoints[4])[1] == -1:
                     self.x_traces[pose.id].append(self.x_traces[pose.id][-1])
