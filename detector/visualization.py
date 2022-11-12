@@ -65,10 +65,9 @@ class Visualizer:
                     self.t_traces[pose.id] = [self.curr_frame]
             # id in list
             else:
-                # print(f"id {pose.id} continues to be in tracking area.")
+                print(f"id {pose.id} continues to be in tracking area.")
                 if (pose.keypoints[4])[0] == -1 or (
                         pose.keypoints[4])[1] == -1:
-                    print("-1 case, len trace > 0")
                     self.x_traces[pose.id].append(self.x_traces[pose.id][-1])
                     self.y_traces[pose.id].append(self.y_traces[pose.id][-1])
                 else:
