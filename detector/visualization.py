@@ -54,25 +54,25 @@ class Visualizer:
             # id not in list
             if self.x_traces.get(pose.id) is None:
                 self.last_new_appearance = self.curr_frame
-                if (pose.keypoints[4])[0] == -1 or (
-                        pose.keypoints[4])[1] == -1:
+                if (pose.keypoints[7])[0] == -1 or (
+                        pose.keypoints[7])[1] == -1:
                     continue
                 else:
                     self.total_count += 1
                     tqdm.write(f"id {pose.id} entered tracking area.")
-                    self.x_traces[pose.id] = [(pose.keypoints[4])[0]]
-                    self.y_traces[pose.id] = [(pose.keypoints[4])[1]]
+                    self.x_traces[pose.id] = [(pose.keypoints[7])[0]]
+                    self.y_traces[pose.id] = [(pose.keypoints[7])[1]]
                     self.t_traces[pose.id] = [self.curr_frame]
             # id in list
             else:
                 tqdm.write(f"id {pose.id} continues to be in tracking area.")
-                if (pose.keypoints[4])[0] == -1 or (
-                        pose.keypoints[4])[1] == -1:
+                if (pose.keypoints[7])[0] == -1 or (
+                        pose.keypoints[7])[1] == -1:
                     self.x_traces[pose.id].append(self.x_traces[pose.id][-1])
                     self.y_traces[pose.id].append(self.y_traces[pose.id][-1])
                 else:
-                    self.x_traces[pose.id].append((pose.keypoints[4])[0])
-                    self.y_traces[pose.id].append((pose.keypoints[4])[1])
+                    self.x_traces[pose.id].append((pose.keypoints[7])[0])
+                    self.y_traces[pose.id].append((pose.keypoints[7])[1])
                 self.t_traces[pose.id].append(self.curr_frame)
 
     def cut_traces(self):

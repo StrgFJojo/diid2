@@ -90,7 +90,7 @@ def run(
             total=frame_provider.total_frames,
         )
     ):
-        img = cv2.flip(img, 0)
+        img = cv2.flip(img, 1)
         # For non-webcam input, skip frames if desired
         if video != "0" and frame_idx % frame_skip != 0:
             continue
