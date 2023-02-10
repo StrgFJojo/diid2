@@ -35,5 +35,5 @@
 ### Examples
 Frappant Gallery, Hamburg. 2022.
 
-![example-frappant-1](/Users/josephinevandelden/Desktop/IMG_9037.jpg)
-![example-frappant-2](/Users/josephinevandelden/Desktop/IMG_9075.jpg)
+![example-frappant-1](IMG_9037.jpg)
+![example-frappant-2](IMG_9075.jpg)
