@@ -34,6 +34,7 @@
 
 ### Examples
 Frappant Gallery, Hamburg. 2022.
+Photos: (c) Felix Ebell
 
 ![example-frappant-1](IMG_9037.jpg)
 ![example-frappant-2](IMG_9075.jpg)
